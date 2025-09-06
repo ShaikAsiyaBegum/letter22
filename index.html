@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>✉️ Letter22</title>
+<style>
+  :root{--ui-bg:rgba(0,0,0,0.75);--accent:#00f0d1}
+  body{margin:0;font-family:Verdana,Arial,sans-serif;background:#000;color:#fff;text-align:center;overflow-x:hidden}
+  h1{font-size:34px;margin:14px;color:gold;text-shadow:0 0 8px #fff}
+  .page{display:none;min-height:100vh;padding:18px;box-sizing:border-box;background-position:center;background-size:cover}
+  .active{display:block}
+  button{margin:10px;padding:10px 18px;font-size:15px;border:none;border-radius:8px;cursor:pointer;background:linear-gradient(45deg,teal,cyan);color:#000;font-weight:700}
+  /* Black text wrappers requested */
+  .box, .dialogueBox, .question, p, h2, h3 { background:black; display:inline-block; padding:8px 12px; border-radius:8px; color:#fff; }
+  .dialogueBox{max-width:700px;margin:12px auto;text-align:left;cursor:pointer}
+  .line{display:flex;align-items:center;gap:10px;margin:8px 0}
+  .icon{width:40px;height:40px;border-radius:50%;flex:0 0 40px}
+  .siyashiniIcon{background:cyan}
+  .aarveeIcon{background:lime}
+  /* puzzle styles */
+  .puzzleArea{margin:12px auto;max-width:680px}
+  .slot{display:inline-block;width:48px;height:48px;border:1px solid #fff;margin:6px;vertical-align:middle;line-height:48px;border-radius:6px;background:#111;color:gold;font-weight:700}
+  .letterBtn{display:inline-block;margin:6px;padding:8px 12px;background:#333;color:#fff;border-radius:6px;cursor:pointer}
+  /* hearts */
+  #hearts{font-size:20px;margin:8px}
+  /* canvas responsive */
+  .gameCanvas{max-width:100%;width:540px;height:auto;border:3px solid #fff;border-radius:8px;background:#111;display:block;margin:10px auto}
+  /* floating key */
+  #keyBubble{display:none;position:relative;margin:18px auto;width:64px;height:64px;border-radius:50%;background:rgba(173,216,230,0.85);border:2px solid #fff;line-height:64px;font-size:34px;color:gold;cursor:pointer;animation:floatUp 1.6s ease-in-out infinite alternate;}
+  @keyframes floatUp{from{transform:translateY(0)}to{transform:translateY(-12px)}}
+  /* arrow controls for level1 */
+  .arrowControls{display:flex;justify-content:center;gap:18px;margin-top:10px}
+  .arrowBtn{font-size:22px;padding:10px 16px;border-radius:8px;background:#222;color:#fff;border:2px solid #444;cursor:pointer}
+  .options{max-width:760px;margin:10px auto;text-align:left}
+  .options button{display:block;width:100%;margin:6px 0;padding:10px;border-radius:8px;background:#222;color:#fff;border:1px solid #444;cursor:pointer}
+  .options button.selected{background:gold;color:#000}
+  @media(max-width:560px){
+    .gameCanvas{width:92%}
+    .dialogueBox,.box{max-width:92%}
+    .slot{width:40px;height:40px;line-height:40px}
+    .letterBtn{padding:6px 8px}
+    button{font-size:14px}
+  }
+</style>
+</head>
+<body>
+  <h1>✉️ Letter22</h1>
+
+  <!-- INTRO -->
+  <div id="intro" class="page active" style="background:url('https://c4.wallpaperflare.com/wallpaper/413/200/1014/anime-girls-original-characters-crow-letter-missile228-hd-wallpaper-preview.jpg') center/cover">
+    <div class="box">
+      <strong>Story</strong><br>
+      Siyashini, daughter of an Army Major, must recover <b>Letter22</b> — the secret that can save her family.
+      With courage and the help of Aarvee (whose family was once saved by Siyashini’s father), she must pass many trials.
+    </div>
+    <div><button onclick="goTo('level1')">▶ Begin Journey</button></div>
+  </div>
+
+  <!-- LEVEL 1: ARROW-BASED movement -->
+  <div id="level1" class="page" style="background:url('https://www.shutterstock.com/image-illustration/anime-style-japanese-samurai-army-260nw-2213082959.jpg') center/cover">
+    <h2 class="box">Level 1: Army Blockage ⚔️</h2>
+    <div class="box" style="display:block;margin:10px auto">Use the ⬅️ and ➡️ buttons to guide Siyashini step-by-step. Reach the yellow exit at the right. Avoid red soldiers.</div>
+    <canvas id="gameCanvas" class="gameCanvas" width="540" height="360"></canvas>
+
+    <div class="arrowControls">
+      <button class="arrowBtn" id="leftArrow">⬅️</button>
+      <button class="arrowBtn" id="rightArrow">➡️</button>
+    </div>
+  </div>
+
+  <!-- LEVEL 2: Dialogue + puzzle -->
+  <div id="level2" class="page" style="background:url('https://e1.pxfuel.com/desktop-wallpaper/265/955/desktop-wallpaper-your-name-anime-your-name-aesthetic-thumbnail.jpg') center/cover">
+    <h2 class="box">Level 2: The Ally — Aarvee</h2>
+    <div id="dialogue2" class="dialogueBox"></div>
+
+    <div id="puzzleBox" style="display:none" class="puzzleArea">
+      <h3 class="box">🧩 Puzzle — Rearrange</h3>
+      <div id="slots" style="margin-top:10px"></div>
+      <div id="letters" style="margin-top:12px"></div>
+      <div style="margin-top:12px"><button onclick="submitPuzzle()">✅ Submit</button></div>
+    </div>
+
+    <div id="keyBubble" title="Tap to continue">🔑</div>
+  </div>
+
+  <!-- LEVEL 3: Mini1 SHOOTER -->
+  <div id="mini1" class="page" style="background:url('https://www.photoshoplady.com/wp-content/uploads/2011/09/Generate-a-Fantastic-War-Scenery-L.jpg') center/cover">
+    <h2 class="box">Level 3 — Mini 1: Soldier Firefight 🔫</h2>
+    <div class="box" style="display:block;margin:10px auto">Rules: Tap canvas to move Siyashini vertically (tap where you want her Y). Each tap also fires a bullet forward. Enemies fire straight horizontal bullets. Lose <b>5 hearts</b> → mini restarts. Defeat all enemies → proceed to Mini 2.</div>
+    <div id="hearts">Hearts: <span id="heartCount">❤️❤️❤️❤️❤️</span></div>
+    <canvas id="shooterCanvas" class="gameCanvas" width="700" height="360"></canvas>
+  </div>
+
+  <!-- LEVEL 3: Mini2 CUPBOARD QUIZ -->
+  <div id="mini2" class="page" style="background:url('https://w0.peakpx.com/wallpaper/835/22/HD-wallpaper-love-letter-anime-girl-school-uniform-romance-brown-hair-sunset-scenic-anime-thumbnail.jpg') center/cover">
+    <h2 class="box">Mini 2 — Father’s Cupboard 🔐</h2>
+    <div id="dialogue3" class="dialogueBox"></div>
+
+    <div id="questions" style="display:none;max-width:760px;margin:10px auto">
+      <div class="question">
+        <p>1️⃣ Where did your father first take you for training?</p>
+        <div class="options" id="q1">
+          <button onclick="pick(1,'ooty',this)">Ooty</button>
+          <button onclick="pick(1,'delhi',this)">Delhi</button>
+          <button onclick="pick(1,'goa',this)">Goa</button>
+        </div>
+      </div>
+
+      <div class="question">
+        <p>2️⃣ What’s your father’s lucky number?</p>
+        <div class="options" id="q2">
+          <button onclick="pick(2,'22',this)">22</button>
+          <button onclick="pick(2,'7',this)">7</button>
+          <button onclick="pick(2,'11',this)">11</button>
+        </div>
+      </div>
+
+      <div class="question">
+        <p>3️⃣ What word did he whisper before every exam?</p>
+        <div class="options" id="q3">
+          <button onclick="pick(3,'courage',this)">Courage</button>
+          <button onclick="pick(3,'victory',this)">Victory</button>
+          <button onclick="pick(3,'bravery',this)">Bravery</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px"><button onclick="submitAnswers()">✅ Unlock Cupboard</button></div>
+    </div>
+  </div>
+
+  <!-- ENDING -->
+  <div id="ending" class="page" style="background:url('https://i.pinimg.com/1200x/96/8d/a7/968da70f29bde01711f211c5cdea4ce3.jpg') center/cover">
+    <h2 class="box">🏆 Letter22 Revealed</h2>
+    <div id="finalDialogue" class="dialogueBox"></div>
+  </div>
+
+<script>
+/* ========== Navigation ========== */
+function goTo(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  // init per page
+  if(id === 'level1') initLevel1();
+  if(id === 'level2') startDialogue2();
+  if(id === 'mini1') initMini1();
+  if(id === 'mini2') startDialogue3();
+  if(id === 'ending') startEnding();
+}
+
+/* ========== LEVEL 1: arrow-buttons movement (step-by-step) ========== */
+const gameCanvas = document.getElementById('gameCanvas');
+const gctx = gameCanvas.getContext('2d');
+const leftArrow = document.getElementById('leftArrow');
+const rightArrow = document.getElementById('rightArrow');
+
+let player = { x:50, y: gameCanvas.height - 60, size:22 };
+let patrols = [];
+let level1Running = false;
+const moveStep = 30; // block-by-block pixels per arrow tap
+
+function initLevel1(){
+  // reset player & patrols
+  player.x = 50;
+  player.y = gameCanvas.height - 60;
+  patrols = [
+    { x:120, y:60, w:44, h:18, dx:2 },
+    { x:360, y:180, w:44, h:18, dx:-2 },
+    { x:220, y:120, w:44, h:18, dx:1.6 }
+  ];
+  level1Running = true;
+  drawLevel1();
+  // attach arrow handlers (touch/click)
+  leftArrow.ontouchstart = leftArrow.onclick = () => {
+    if(!level1Running) return;
+    player.x = Math.max(0, player.x - moveStep);
+    drawLevel1();
+  };
+  rightArrow.ontouchstart = rightArrow.onclick = () => {
+    if(!level1Running) return;
+    player.x = Math.min(gameCanvas.width - player.size, player.x + moveStep);
+    drawLevel1();
+    // check victory after moving right
+    if(player.x > gameCanvas.width - 60){
+      level1Running = false;
+      setTimeout(()=>{ alert('✅ Level 1 cleared! Proceeding to Level 2.'); goTo('level2'); }, 120);
+    }
+  };
+  requestAnimationFrame(loopLevel1);
+}
+
+function loopLevel1(){
+  if(!level1Running) return;
+  // move patrols
+  for(let p of patrols){
+    p.x += p.dx;
+    if(p.x < 0 || p.x + p.w > gameCanvas.width) p.dx *= -1;
+    if(collide(player, p)){
+      level1Running = false;
+      setTimeout(()=>{ alert('❌ Caught by soldiers! Restarting Level 1.'); initLevel1(); }, 30);
+      return;
+    }
+  }
+  drawLevel1();
+  requestAnimationFrame(loopLevel1);
+}
+
+function drawLevel1(){
+  gctx.clearRect(0,0,gameCanvas.width,gameCanvas.height);
+  // player
+  gctx.fillStyle = 'cyan';
+  gctx.fillRect(player.x, player.y, player.size, player.size);
+  // patrols
+  gctx.fillStyle = 'red';
+  for(let p of patrols) gctx.fillRect(p.x, p.y, p.w, p.h);
+  // exit zone
+  gctx.fillStyle = 'gold';
+  gctx.fillRect(gameCanvas.width - 26, 0, 26, gameCanvas.height);
+}
+function collide(a,b){
+  return a.x < b.x + b.w && a.x + a.size > b.x && a.y < b.y + b.h && a.y + a.size > b.y;
+}
+
+/* ========== LEVEL 2: Dialogue & Puzzle ========== */
+const dialogue2 = [
+  { who: 'siyashini', text: "Who are you standing here, stranger?" },
+  { who: 'aarvee', text: "I am Aarvee. Long ago your father helped my family — I won’t forget that." },
+  { who: 'siyashini', text: "My father is captured. I need Letter22." },
+  { who: 'aarvee', text: "Only Letter22 can save them. Solve the puzzle to earn the key." }
+];
+let d2i = 0;
+function startDialogue2(){
+  d2i = 0;
+  document.getElementById('dialogue2').style.display = 'block';
+  showD2();
+}
+function showD2(){
+  const box = document.getElementById('dialogue2');
+  if(d2i < dialogue2.length){
+    const L = dialogue2[d2i];
+    const ic = L.who === 'siyashini' ? 'siyashiniIcon' : 'aarveeIcon';
+    box.innerHTML = `<div class="line"><div class="icon ${ic}"></div><div><strong>${L.who}:</strong> ${L.text}</div></div><br><small style="color:#ccc">Tap to continue</small>`;
+    box.onclick = ()=>{ d2i++; showD2(); };
+  } else {
+    box.style.display = 'none';
+    setupPuzzle();
+  }
+}
+
+/* Puzzle: click letter to fill first empty slot */
+const TARGET = 'LETTER22';
+function setupPuzzle(){
+  document.getElementById('puzzleBox').style.display = 'block';
+  const slots = document.getElementById('slots'); slots.innerHTML = '';
+  const letters = document.getElementById('letters'); letters.innerHTML = '';
+  // create slots
+  for(let i=0;i<TARGET.length;i++){
+    const s = document.createElement('div'); s.className = 'slot'; s.dataset.idx = i; s.textContent = '';
+    slots.appendChild(s);
+  }
+  // create shuffled letter buttons
+  let arr = TARGET.split('');
+  arr = arr.sort(()=>Math.random()-0.5);
+  arr.forEach(ch=>{
+    const b = document.createElement('div'); b.className = 'letterBtn'; b.textContent = ch;
+    b.ontouchstart = b.onclick = () => {
+      const empty = Array.from(document.querySelectorAll('#slots .slot')).find(s => s.textContent === '');
+      if(!empty) return;
+      empty.textContent = ch;
+      b.style.opacity = '0.4';
+      b.onclick = b.ontouchstart = null;
+    };
+    letters.appendChild(b);
+  });
+}
+
+function submitPuzzle(){
+  const slots = Array.from(document.querySelectorAll('#slots .slot')).map(s=>s.textContent||'');
+  if(slots.join('') === TARGET){
+    document.getElementById('puzzleBox').style.display = 'none';
+    const key = document.getElementById('keyBubble');
+    key.style.display = 'block';
+    key.onclick = key.ontouchstart = ()=> {
+      key.style.display = 'none';
+      goTo('mini1');
+    };
+    alert('✨ Correct — you found the key! Tap the golden key to continue.');
+  } else {
+    alert('❌ Wrong order — try again.');
+    // reset
+    setupPuzzle();
+  }
+}
+
+/* ========== MINI1: Shooter (tap to move & shoot) ========== */
+const shooterCanvas = document.getElementById('shooterCanvas');
+const sctx = shooterCanvas.getContext('2d');
+
+let hero = { x: 50, y: shooterCanvas.height/2, size:22 };
+let pBullets = [], eBullets = [], enemies = [], mini1Running = false;
+let hearts = 5;
+let enemyFireTimer = null;
+
+function initMini1(){
+  // reset
+  hero.x = 50; hero.y = shooterCanvas.height/2;
+  pBullets = []; eBullets = [];
+  enemies = [
+    { x: shooterCanvas.width - 80, y: 60, w:36, h:36, alive:true },
+    { x: shooterCanvas.width - 80, y: 160, w:36, h:36, alive:true },
+    { x: shooterCanvas.width - 80, y: 260, w:36, h:36, alive:true }
+  ];
+  hearts = 5; updateHeartUI();
+  // touch/click handler
+  shooterCanvas.ontouchstart = shooterCanvas.onclick = (ev) => {
+    const rect = shooterCanvas.getBoundingClientRect();
+    const y = (ev.touches ? ev.touches[0].clientY : ev.clientY) - rect.top;
+    hero.y = Math.max(0, Math.min(shooterCanvas.height - hero.size, y - hero.size/2));
+    // create player bullet
+    pBullets.push({ x: hero.x + hero.size, y: hero.y + hero.size/2, dx: 9 });
+  };
+  // enemies fire straight horizontally periodically
+  if(enemyFireTimer) clearInterval(enemyFireTimer);
+  enemyFireTimer = setInterval(()=>{
+    enemies.forEach(en => { if(en.alive) eBullets.push({ x: en.x, y: en.y + en.h/2, dx: -6 }); });
+  }, 1000);
+  mini1Running = true;
+  requestAnimationFrame(loopMini1);
+}
+
+function loopMini1(){
+  if(!mini1Running) return;
+  updateMini1();
+  drawMini1();
+  requestAnimationFrame(loopMini1);
+}
+
+function updateMini1(){
+  // update player bullets
+  pBullets.forEach(b => b.x += b.dx);
+  pBullets = pBullets.filter(b => b.x < shooterCanvas.width + 20);
+  // update enemy bullets
+  eBullets.forEach(b => b.x += b.dx);
+  eBullets = eBullets.filter(b => b.x > -20);
+  // collisions: player bullet vs enemy
+  for(let i=pBullets.length-1;i>=0;i--){
+    const b = pBullets[i];
+    for(let j=0;j<enemies.length;j++){
+      const en = enemies[j];
+      if(en.alive && b.x >= en.x && b.x <= en.x+en.w && Math.abs(b.y - (en.y + en.h/2)) < en.h/1.2){
+        en.alive = false;
+        pBullets.splice(i,1);
+        break;
+      }
+    }
+  }
+  // collisions: enemy bullets vs hero
+  for(let i=eBullets.length-1;i>=0;i--){
+    const eb = eBullets[i];
+    if(eb.x <= hero.x + hero.size && Math.abs(eb.y - (hero.y + hero.size/2)) < hero.size){
+      eBullets.splice(i,1);
+      hearts--;
+      updateHeartUI();
+      if(hearts <= 0){
+        mini1Running = false;
+        clearInterval(enemyFireTimer);
+        alert('❌ All hearts lost — restarting Mini 1');
+        initMini1();
+        return;
+      }
+    }
+  }
+  // check win: all enemies dead
+  if(enemies.every(e => !e.alive)){
+    mini1Running = false;
+    clearInterval(enemyFireTimer);
+    alert('✅ Mini 1 cleared! Proceeding to Mini 2 (cupboard).');
+    goTo('mini2');
+    return;
+  }
+}
+
+function drawMini1(){
+  sctx.clearRect(0,0,shooterCanvas.width,shooterCanvas.height);
+  // hero
+  sctx.fillStyle = 'cyan';
+  sctx.fillRect(hero.x, hero.y, hero.size, hero.size);
+  // enemies
+  sctx.fillStyle = 'red';
+  enemies.forEach(en => { if(en.alive) sctx.fillRect(en.x, en.y, en.w, en.h); });
+  // player bullets
+  sctx.fillStyle = 'yellow';
+  pBullets.forEach(b => sctx.fillRect(b.x, b.y - 2, 8, 4));
+  // enemy bullets
+  sctx.fillStyle = 'white';
+  eBullets.forEach(b => sctx.fillRect(b.x, b.y - 2, 8, 4));
+}
+
+function updateHeartUI(){
+  document.getElementById('heartCount').textContent = '❤️'.repeat(Math.max(0, hearts));
+}
+
+/* ========== MINI2: Dialogue + MCQ ========== */
+const conv3 = [
+  { w: 'aarvee', t: "Remember the key you found, Siyashini. Your father saved my family once — I owe him." },
+  { w: 'siyashini', t: "I won't fail. The cupboard holds the letter." },
+  { w: 'aarvee', t: "Answer the questions — only you would know them." }
+];
+let d3i = 0;
+let picks = {};
+function startDialogue3(){
+  picks = {};
+  d3i = 0; show3();
+}
+function show3(){
+  const box = document.getElementById('dialogue3');
+  if(d3i < conv3.length){
+    const l = conv3[d3i];
+    const ic = l.w === 'siyashini' ? 'siyashiniIcon' : 'aarveeIcon';
+    box.innerHTML = `<div class="line"><div class="icon ${ic}"></div><div><strong>${l.w}:</strong> ${l.t}</div></div><br><small style="color:#ccc">Tap to continue</small>`;
+    box.onclick = () => { d3i++; show3(); };
+  } else {
+    box.style.display = 'none';
+    document.getElementById('questions').style.display = 'block';
+  }
+}
+function pick(q,v,btn){
+  picks[q] = v;
+  const group = document.getElementById('q'+q).querySelectorAll('button');
+  group.forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+function submitAnswers(){
+  if(!picks[1]||!picks[2]||!picks[3]){ alert('❗ Please answer all three questions before submitting.'); return; }
+  if(picks[1]==='ooty' && picks[2]==='22' && picks[3]==='courage'){
+    alert('✅ Cupboard unlocked! Reading Letter22...');
+    goTo('ending');
+  } else {
+    alert('❌ Wrong answers, try again.');
+    picks = {};
+    document.querySelectorAll('.options button').forEach(b => b.classList.remove('selected'));
+  }
+}
+
+/* ========== ENDING: show final dialogues & letter ========== */
+const convEnd = [
+  { w: 'siyashini', t: "This… this is Letter22. Father’s handwriting." },
+  { w: 'aarvee', t: "Read it, Siyashini. Let his words guide you — he saved my family, so I help you now." },
+  { w: 'siyashini', t: "'To my beloved: If you find this, know that the path was never easy. I gave everything to protect our people. Ooty holds the first dawn; 22 is our sign; Courage — that was always yours. There is more hidden — keep faith, beware of those who smile at night.' " },
+  { w: 'aarvee', t: "Your family is safe. His legacy lives in you." },
+  { w: 'siyashini', t: "Thank you, Aarvee. We will guard this secret together." }
+];
+let endIndex = 0;
+function startEnding(){
+  endIndex = 0; showEnd();
+}
+function showEnd(){
+  const box = document.getElementById('finalDialogue');
+  if(endIndex < convEnd.length){
+    const l = convEnd[endIndex];
+    const ic = l.w === 'siyashini' ? 'siyashiniIcon' : 'aarveeIcon';
+    box.innerHTML = `<div class="line"><div class="icon ${ic}"></div><div><strong>${l.w}:</strong> ${l.t}</div></div><br><small style="color:#ccc">Tap to continue</small>`;
+    box.onclick = ()=> { endIndex++; showEnd(); };
+  } else {
+    box.innerHTML = `<h3 style="margin:8px">🌅 The family is safe. Siyashini and Aarvee walk into a new dawn.</h3><p class="box">Letter22 remains a guarded hope — a secret of love, sacrifice and a quiet warning.</p>`;
+  }
+}
+
+/* ========== Start at intro ========== */
+goTo('intro');
+
+/* Expose some functions (keep compatibility) */
+window.goTo = goTo;
+window.submitPuzzle = submitPuzzle;
+window.submitAnswers = submitAnswers;
+</script>
+</body>
+</html>
